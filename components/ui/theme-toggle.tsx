@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers/theme-providers";
 import { Moon, Sun } from "lucide-react";
 
 export function ThemeToggle() {
