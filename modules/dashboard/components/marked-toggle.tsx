@@ -1,0 +1,76 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+
+import { StarIcon, StarOffIcon } from "lucide-react"
+import type React from "react"
+import { useState, useEffect, forwardRef } from "react"
+import { toast } from "sonner"
+import { toggleStarMarked } from "../actions"
+import { useRouter } from "next/navigation"
+
+interface MarkedToggleButtonProps extends React.ComponentPropsWithoutRef<typeof Button> {
+  markedForRevision: boolean
+  id: string
+}
+
+export const MarkedToggleButton = forwardRef<HTMLButtonElement, MarkedToggleButtonProps>(
+  ({ markedForRevision, id, onClick, className, children, ...props }, ref) => {
+    const router = useRouter()
+    const [isMarked, setIsMarked] = useState(markedForRevision)
+
+    useEffect(() => {
+      setIsMarked(markedForRevision)
+    }, [markedForRevision])
+
+    const handleToggle = async (event: React.MouseEvent<HTMLButtonElement>) => {
+      // Call the original onClick if provided by the parent (DropdownMenuItem)
+      onClick?.(event)
+
+      const newMarkedState = !isMarked
+      setIsMarked(newMarkedState)
+
+      try {
+        const res = await toggleStarMarked(id, newMarkedState)
+        const { success, error, isMarked } = res
+
+        if (!success || error) {
+          setIsMarked(!newMarkedState)
+          toast.error(error || "Failed to update favorite")
+          return
+        }
+
+        if (isMarked && !error && success) {
+          toast.success("Added to Favorites successfully")
+        } else {
+          toast.success("Removed from Favorites successfully")
+        }
+        router.refresh()
+
+      } catch (error) {
+        console.error("Failed to toggle mark for revision:", error)
+        setIsMarked(!newMarkedState) // Revert state if the update fails
+        toast.error("Failed to update favorite")
+      }
+    }
+
+    return (
+      <Button
+        ref={ref}
+        variant="ghost"
+        className={`flex items-center justify-start w-full px-2 py-1.5 text-sm rounded-md cursor-pointer ${className}`}
+        onClick={handleToggle}
+        {...props}
+      >
+        {isMarked ? (
+          <StarIcon size={16} className="text-red-500 mr-2" />
+        ) : (
+          <StarOffIcon size={16} className="text-gray-500 mr-2" />
+        )}
+        {children || (isMarked ? "Remove Favorite" : "Add to Favorite")}
+      </Button>
+    )
+  },
+)
+
+MarkedToggleButton.displayName = "MarkedToggleButton"
