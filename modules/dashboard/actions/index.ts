@@ -163,6 +163,8 @@ export const createPlayground = async (data: {
       },
     });
 
+    revalidatePath("/dashboard");
+
     return playground;
   } catch (error) {
     console.log(error);
