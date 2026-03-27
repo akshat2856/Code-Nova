@@ -447,19 +447,28 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
   },
 
  updateFileContent: (fileId, content) => {
-    set((state) => ({
-      openFiles: state.openFiles.map((file) =>
-        file.id === fileId
-          ? {
-              ...file,
-              content,
-              hasUnsavedChanges: content !== file.originalContent,
-            }
-          : file
-      ),
-      editorContent:
-        fileId === state.activeFileId ? content : state.editorContent,
-    }));
+    set((state) => {
+      const targetFile = state.openFiles.find((file) => file.id === fileId);
+
+      // No-op when content has not changed to avoid unnecessary render cycles.
+      if (!targetFile || targetFile.content === content) {
+        return state;
+      }
+
+      return {
+        openFiles: state.openFiles.map((file) =>
+          file.id === fileId
+            ? {
+                ...file,
+                content,
+                hasUnsavedChanges: content !== file.originalContent,
+              }
+            : file
+        ),
+        editorContent:
+          fileId === state.activeFileId ? content : state.editorContent,
+      };
+    });
   },
 
 }));
