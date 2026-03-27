@@ -64,6 +64,20 @@ const WebContainerPreview = ({
     async function setupContainer() {
       if (!instance || isSetupComplete || isSetupInProgress) return;
 
+      const resolveStartScript = async () => {
+        try {
+          const packageJson = await instance.fs.readFile("package.json", "utf8");
+          const parsed = JSON.parse(packageJson);
+          const scripts = parsed?.scripts || {};
+
+          if (scripts.dev) return "dev";
+          if (scripts.start) return "start";
+          return null;
+        } catch {
+          return null;
+        }
+      };
+
       try {
         setIsSetupInProgress(true);
         setSetupError(null);
@@ -184,7 +198,7 @@ const WebContainerPreview = ({
         }));
         setCurrentStep(4);
 
-        // STEP-4 Start The Server
+        // STEP-4 Start The Server (prefer watch mode so preview updates on save)
 
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
@@ -192,7 +206,19 @@ const WebContainerPreview = ({
           );
         }
 
-        const startProcess = await instance.spawn("npm", ["run", "start"]);
+        const startScript = await resolveStartScript();
+
+        if (!startScript) {
+          throw new Error("No 'dev' or 'start' script found in package.json");
+        }
+
+        if (terminalRef.current?.writeToTerminal) {
+          terminalRef.current.writeToTerminal(
+            `▶️ Running npm run ${startScript}\r\n`
+          );
+        }
+
+        const startProcess = await instance.spawn("npm", ["run", startScript]);
 
         instance.on("server-ready", (port: number, url: string) => {
           if (terminalRef.current?.writeToTerminal) {
