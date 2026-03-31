@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Code Nova
 
-## Getting Started
+Code Nova is a Next.js 16 application with:
 
-First, run the development server:
+- NextAuth authentication (GitHub + Google)
+- Prisma + MongoDB
+- AI chat endpoint powered by a local Ollama server
+- Playground and dashboard modules
+
+## 1. Prerequisites
+
+Install these first:
+
+- Node.js 20+ (LTS recommended)
+- npm 10+
+- MongoDB database (local or Atlas)
+- Ollama (optional, only required for local AI chat)
+
+## 2. Clone and install
+
+```bash
+git clone <your-repo-url>
+cd code-nova
+npm install
+```
+
+## 3. Environment variables
+
+Create `.env.local` in the project root and add:
+
+```env
+# Prisma
+DATABASE_URL="mongodb+srv://<user>:<password>@<cluster>/<db>?retryWrites=true&w=majority"
+
+# NextAuth
+AUTH_SECRET="<a-long-random-secret>"
+
+# OAuth providers
+AUTH_GITHUB_ID=""
+AUTH_GITHUB_SECRET=""
+AUTH_GOOGLE_ID=""
+AUTH_GOOGLE_SECRET=""
+
+# Local AI (Ollama)
+OLLAMA_BASE_URL="http://127.0.0.1:11434"
+OLLAMA_MODEL="codellama:7b"
+OLLAMA_TIMEOUT_MS="0"
+OLLAMA_NUM_PREDICT="220"
+```
+
+Notes:
+
+- `DATABASE_URL` is required.
+- `AUTH_SECRET` is required.
+- OAuth credentials are required for GitHub/Google login flows.
+- Ollama variables are optional unless you want to use the chat API locally.
+
+## 4. Prepare database
+
+Generate the Prisma client and sync schema to MongoDB:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+## 5. Run the app
+
+Start development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 6. Run local AI chat (optional)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+If you want `/api/chat` to work locally, start Ollama and pull a model:
 
-## Learn More
+```bash
+ollama serve
+ollama pull codellama:7b
+```
 
-To learn more about Next.js, take a look at the following resources:
+If you use a different model, set `OLLAMA_MODEL` in `.env.local`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 7. Production build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm run start
+```
 
-## Deploy on Vercel
+## Available scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` - start dev server
+- `npm run build` - build for production
+- `npm run start` - run production build
+- `npm run lint` - run ESLint
+- `npm run fix:playground-dates` - run date fix script
